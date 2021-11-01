@@ -19,7 +19,7 @@ public class RedisBuilder implements RedisAPI {
 
     private int redisPort;
     private String redisHost;
-    private Jedis publisher, subscriber;
+    private Jedis publisher, subscriber, storage;
     private ChannelManager channelManager;
     private JedisPool jedisPool = new JedisPool();
 
@@ -73,6 +73,14 @@ public class RedisBuilder implements RedisAPI {
     }
 
     @Override
+    public RedisAPI authDatabase(String password) {
+        if (this.storage == null)
+            this.storage = this.jedisPool.getResource();
+        this.storage.auth(password);
+        return this;
+    }
+
+    @Override
     public RedisAPI create(Class<?> mainClass) {
         this.annotationScanner.findChannelActions(mainClass);
         this.channelManager = new ChannelManager();
@@ -101,6 +109,30 @@ public class RedisBuilder implements RedisAPI {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void publish(String channel, String message) {
+        this.publisher.publish(channel, message);
+    }
+
+    @Override
+    public void setKey(String key, String value) {
+        if (value == null) {
+            this.storage.set(key, null);
+            return;
+        }
+        this.storage.set(key, value);
+    }
+
+    @Override
+    public String getFromKey(String key) {
+        return this.storage.get(key);
+    }
+
+    @Override
+    public boolean hasKey(String key) {
+        return this.storage.get(key) != null;
     }
 
     private void subscribe(List<Class<? extends IRedisChannelAction>> classes) {

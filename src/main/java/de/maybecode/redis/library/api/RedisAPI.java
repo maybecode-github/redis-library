@@ -48,10 +48,26 @@ public interface RedisAPI {
      */
     RedisAPI authSubscriber(String password);
 
+    /**
+     * set database password
+     *
+     * @param password database password
+     * @return redis api
+     */
+    RedisAPI authDatabase(String password);
+
     RedisAPI create(Class<?> mainClass);
 
     Jedis newJedisInstance(String password);
 
     void publish(Class<? extends PublishService> clazz, String message);
+
+    void publish(String channel, String message);
+
+    void setKey(String key, String value);
+
+    String getFromKey(String key);
+
+    boolean hasKey(String key);
 
 }
